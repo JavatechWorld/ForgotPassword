@@ -16,46 +16,46 @@ import com.spring.implementation.service.UserDetailsServiceImpl;
 @Configuration
 @EnableWebSecurity
 public class SpringSecurity {
-	
 
-		    @Autowired
-		    private UserDetailsServiceImpl userDetailsService;
-		  
-		    @Bean
-		    public BCryptPasswordEncoder passwordEncoder() {
-		        return new BCryptPasswordEncoder();
-		    }
-			
-			@Bean
-		    public DaoAuthenticationProvider authenticationProvider() {
-		        DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
-		        auth.setUserDetailsService(userDetailsService);
-		        auth.setPasswordEncoder(passwordEncoder());
-		        return auth;
-		    }
-			
-			public AuthenticationManager authenticationManager(AuthenticationConfiguration
-					authenticationConfiguration) throws Exception {
-		        return authenticationConfiguration.getAuthenticationManager();
-		    }
-				    
-		    @Bean
-		    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		        http.authorizeRequests()
-		            .antMatchers("/register","/forgotPassword","/resetPassword/**").permitAll()
-		            .anyRequest().authenticated()
-		            .and()
-		            .formLogin()
-		            .loginPage("/login").defaultSuccessUrl("/userDashboard")
-		            .permitAll()
-		            .and()
-		            .logout()
-		            .permitAll();
+	@Autowired
+	private UserDetailsServiceImpl userDetailsService;
 
-		        http.csrf().disable();
-		        http.headers().defaultsDisabled().cacheControl();
-		        
-		        return http.build();
-		    }
+	@Bean
+	public BCryptPasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public DaoAuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
+		auth.setUserDetailsService(userDetailsService);
+		auth.setPasswordEncoder(passwordEncoder());
+		return auth;
+	}
+
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+			throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
+
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.authorizeHttpRequests(requests -> {
+			requests.requestMatchers("/register", "/forgotPassword", "/resetPassword/**").permitAll();
+			requests.anyRequest().authenticated();
+		})
+
+				.formLogin(login -> {
+					login.loginPage("/login").defaultSuccessUrl("/userDashboard")
+							.permitAll();
+				})
+
+				.logout(logout -> logout
+						.permitAll())
+
+				.csrf(csrf -> csrf.disable());
+
+		return http.build();
+	}
 
 }
